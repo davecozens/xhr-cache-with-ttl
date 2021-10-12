@@ -39,7 +39,6 @@ function checkInCacheIndex(key) {
             let timeNow = dayjs().unix()
             let expired = timeNow > parsedCacheMetadata.expires
             if (expired) {
-                console.log('expired from cache')
                 localStorage.removeItem(`${keyPrefix}${key}_metadata`)
                 localStorage.removeItem(`${keyPrefix}${key}_data`)
                 return undefined
@@ -56,21 +55,19 @@ function checkInCacheIndex(key) {
 
 function xhrCache(method, url, options = {}) {
     return new Promise(function (resolve, reject) {
-        let cachedData = checkInCacheIndex(url)
+        let ttl=300
+        if(options.ttl){
+            ttl=options.ttl
+        }
+        delete options.ttl
+        let cachedData = checkInCacheIndex(url,ttl)
 
         if (cachedData) {
-            console.log('resolved with cache')
             resolve(cachedData)
         } else {
-            console.log('not cached')
-
-
             try {
-                console.log('using method...', method)
                 axios[method](url, options).then((res) => {
-                    //console.log({res})
-                    console.log('req completed ok')
-                    putToCache(url, res, 100)
+                    putToCache(url, res, ttl)
                     resolve(res)
                 })
 
