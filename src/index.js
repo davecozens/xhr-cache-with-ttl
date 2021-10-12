@@ -1,23 +1,23 @@
 const axios = require('axios')
 const dayjs = require('dayjs')
-const keyPrefix='XCWT_'
+const keyPrefix = 'XCWT_'
 
-function putToCacheIndex(key, ttl) {
-    localStorage.setItem(`${keyPrefix}${key}_metadata`, JSON.stringify({ttl, expires: dayjs().unix() + ttl}))
+function setCacheIndexForKey(key, ttl) {
+    localStorage.setItem(`${keyPrefix}${key}_metadata`, JSON.stringify({ttl, setAt: dayjs().unix()}))
 }
 
-function putToCache(key, value, ttl = 30) {
+function setCacheValueForKey(key, value, ttl = 30) {
     let writeValue = value
     if (typeof writeValue === 'object') {
         writeValue = JSON.stringify(writeValue)
     }
     localStorage.setItem(`${keyPrefix}${key}_data`, writeValue)
-    putToCacheIndex(key, ttl)
+    setCacheIndexForKey(key, ttl)
 }
 
-function getFromCache(key) {
+function getCacheValueForKey(key) {
     try {
-        let cacheData = localStorage.getItem(`XCWT_${key}.data`)
+        const cacheData = localStorage.getItem(`XCWT_${key}.data`)
         if (cacheData) {
             try {
                 return JSON.parse(cacheData)
@@ -31,19 +31,29 @@ function getFromCache(key) {
     return undefined
 }
 
-function checkInCacheIndex(key) {
-    let cacheMetadata = localStorage.getItem(`${keyPrefix}${key}_metadata`)
+function removeCacheForKey(key) {
+    localStorage.removeItem(`${keyPrefix}${key}_metadata`)
+    localStorage.removeItem(`${keyPrefix}${key}_data`)
+}
+
+function getCacheIndexForKey(key, ttl) {
+    const cacheMetadata = localStorage.getItem(`${keyPrefix}${key}_metadata`)
     if (cacheMetadata) {
         try {
-            let parsedCacheMetadata = JSON.parse(cacheMetadata)
-            let timeNow = dayjs().unix()
-            let expired = timeNow > parsedCacheMetadata.expires
-            if (expired) {
-                localStorage.removeItem(`${keyPrefix}${key}_metadata`)
-                localStorage.removeItem(`${keyPrefix}${key}_data`)
-                return undefined
+            const parsedCacheMetadata = JSON.parse(cacheMetadata)
+            if (ttl) {
+                parsedCacheMetadata.ttl = ttl
             }
-            return getFromCache(key)
+            const setAt = parsedCacheMetadata.setAt
+            const expiresAt = setAt + ttl
+            const timeNow = dayjs().unix()
+            const expiresIn = expiresAt - timeNow
+            if (expiresIn < 0) {
+                removeCacheForKey(key)
+                return undefined
+            } else {
+                return getCacheValueForKey(key)
+            }
         } catch (e) {
             console.error(e)
         }
@@ -55,19 +65,18 @@ function checkInCacheIndex(key) {
 
 function xhrCache(method, url, options = {}) {
     return new Promise(function (resolve, reject) {
-        let ttl=300
-        if(options.ttl){
-            ttl=options.ttl
+        let ttl
+        if (options.ttl) {
+            ttl = options.ttl
         }
-        delete options.ttl
-        let cachedData = checkInCacheIndex(url,ttl)
-
+        delete options.ttl // shouldnt be sent to Axios
+        const cachedData = getCacheIndexForKey(url, ttl)
         if (cachedData) {
             resolve(cachedData)
         } else {
             try {
                 axios[method](url, options).then((res) => {
-                    putToCache(url, res, ttl)
+                    setCacheValueForKey(url, res, ttl)
                     resolve(res)
                 })
 
