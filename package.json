@@ -1,0 +1,36 @@
+{
+  "name": "xhr-cache-with-ttl",
+  "version": "1.0.0",
+  "description": "Library to cache XHR requests in Local Storage",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "babel src -d dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/davecozens/xhr-cache-with-ttl.git"
+  },
+  "keywords": [
+    "xhr",
+    "ajax",
+    "http",
+    "cache",
+    "ttl"
+  ],
+  "author": "Dave Cozens",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/davecozens/xhr-cache-with-ttl/issues"
+  },
+  "homepage": "https://github.com/davecozens/xhr-cache-with-ttl#readme",
+  "dependencies": {
+    "axios": "^0.22.0",
+    "dayjs": "^1.10.7"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.15.7",
+    "@babel/core": "^7.15.8",
+    "@babel/preset-env": "^7.15.8"
+  }
+}
