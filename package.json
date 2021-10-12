@@ -1,6 +1,6 @@
 {
   "name": "xhr-cache-with-ttl",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Library to cache XHR requests in Local Storage",
   "main": "index.js",
   "scripts": {
